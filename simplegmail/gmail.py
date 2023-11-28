@@ -176,6 +176,42 @@ class Gmail(object):
             # Pass along the error
             raise error
 
+    def reply_to_thread(self, thread_id, sender, to, subject='', msg_html=None, msg_plain=None, cc=None, bcc=None, attachments=None, signature=False, user_id='me'):
+        """
+        Reply to a specific thread.
+        
+        Args:
+            thread_id: The ID of the thread to reply to.
+            sender: The email address the message is being sent from.
+            to: The email address the message is being sent to.
+            subject: The subject line of the email.
+            msg_html: The HTML message of the email.
+            msg_plain: The plain text alternate message of the email.
+            cc: The list of email addresses to be cc'd.
+            bcc: The list of email addresses to be bcc'd.
+            attachments: The list of attachment file names.
+            signature: Whether the account signature should be added to the message.
+            user_id: The address of the sending account. 'me' for the default address associated with the account.
+        
+        Returns:
+            The sent message if successful.
+        """
+        
+        # Create the message similar to send_message
+        msg = self._create_message(sender, to, subject, msg_html, msg_plain, cc=cc, bcc=bcc, attachments=attachments, signature=signature, user_id=user_id)
+        
+        # Add the threadId to the message
+        msg['threadId'] = thread_id
+        
+        try:
+            # Send the message as a reply to the specified thread
+            req = self.service.users().messages().send(userId='me', body=msg)
+            res = req.execute()
+            return self._build_message_from_ref(user_id, res, 'reference')
+        except HttpError as error:
+            # Pass along the error
+            raise error
+
     def get_unread_inbox(
         self,
         user_id: str = 'me',
