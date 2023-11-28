@@ -176,6 +176,50 @@ class Gmail(object):
             # Pass along the error
             raise error
 
+    def create_draft(
+        self,
+        sender: str,
+        to: str,
+        subject: str = '',
+        msg_html: Optional[str] = None,
+        msg_plain: Optional[str] = None,
+        cc: Optional[List[str]] = None,
+        bcc: Optional[List[str]] = None,
+        attachments: Optional[List[str]] = None,
+        signature: bool = False,
+        user_id: str = 'me'
+    ) -> Message:
+        """
+        Creates a draft email.
+
+        Args:
+            [All the same arguments as send_message]
+
+        Returns:
+            The Message object representing the created draft.
+
+        Raises:
+            googleapiclient.errors.HttpError: There was an error executing the HTTP request.
+        """
+
+        msg = self._create_message(
+            sender, to, subject, msg_html, msg_plain, cc=cc, bcc=bcc,
+            attachments=attachments, signature=signature, user_id=user_id
+        )
+
+        try:
+            draft_body = {'message': msg}
+            req = self.service.users().drafts().create(userId=user_id, body=draft_body)
+            res = req.execute()
+            
+            # Directly return the draft response if it has all the needed info
+            print("Draft created with ID:", res.get('id'))
+            return res  # or return a subset of 'res' if needed
+
+        except HttpError as error:
+            # Pass along the error
+            raise error
+
     def reply_to_thread(self, thread_id, sender, to, subject='', msg_html=None, msg_plain=None, cc=None, bcc=None, attachments=None, signature=False, user_id='me'):
         """
         Reply to a specific thread.
