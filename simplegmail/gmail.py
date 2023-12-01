@@ -187,10 +187,14 @@ class Gmail(object):
         bcc: Optional[List[str]] = None,
         attachments: Optional[List[str]] = None,
         signature: bool = False,
+        thread_id: Optional[str] = None,  # Add thread_id parameter
         user_id: str = 'me'
     ) -> Message:
         """
         Creates a draft email.
+
+        Args:
+            thread_id: The ID of the thread this draft is part of. Optional.
 
         Args:
             [All the same arguments as send_message]
@@ -209,15 +213,16 @@ class Gmail(object):
 
         try:
             draft_body = {'message': msg}
+            if thread_id:
+                draft_body['message']['threadId'] = thread_id  # Include threadId in the draft
+
             req = self.service.users().drafts().create(userId=user_id, body=draft_body)
             res = req.execute()
             
-            # Directly return the draft response if it has all the needed info
             print("Draft created with ID:", res.get('id'))
-            return res  # or return a subset of 'res' if needed
+            return res
 
         except HttpError as error:
-            # Pass along the error
             raise error
 
     def reply_to_thread(self, thread_id, sender, to, subject='', msg_html=None, msg_plain=None, cc=None, bcc=None, attachments=None, signature=False, user_id='me'):
